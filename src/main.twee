@@ -1,0 +1,75 @@
+:: StoryTitle
+Household Carbon Calculator
+
+:: Start
+welcome
+
+:: Income
+Tax
+
+:: Food 
+Coffee, Tea, Cocoa and powdered chocolate, alchohol, Cigarettes, meat, dairy, takeaways, coffee shops
+
+:: Utilities
+
+:: Redecorate
+
+:: Travel
+in country
+globally,
+hotels,
+separate homes: boat, trailer,
+
+:: Hobbies
+instruments, gardening, boat, gaming,
+
+:: Electronics
+gaming
+
+:: Pets
+
+:: Education
+
+:: Clothes
+Lets look into clothes!
+Your wardrobe actually has a fair carbon impact.
+
+How often do you buy new clothing?
+<<listbox "_clothesTimePeriod" autoselect>>
+	<<optionsfrom $timePeriod>>
+<</listbox>>
+
+How much do you spend on average when you buy new clothes? (in £)
+<<numberbox "_clothesSpendPerPeriod" 40>>
+
+<script>
+	$categories.clothing.annualSpend = getAnnualSpend(_clothesTimePeriod, _clothesSpendPerPeriod);
+</script>
+
+<<if _clothesTimePeriod != $timePeriod.Annual>
+So that means your average annual spend on clothes is $categories.clothing.annualSpend.
+</if>>
+
+Your estimated yearly emmisions just for your wardrobe is $categories.clothing.emissions() Ktonnes CO2e.
+
+This figure would be less than estimated if you're buying your clothes secondhand.
+
+:: Summary
+
+Okay compiling everything you've said you're estimated yearly green house gas emissions are ?totalEmissions KTonnes CO2e
+
+For comparison:
+add comparison
+
+graph showing where user stands in comparison of everyone whos played this game
+
+graph showing your emissions per category
+
+Thank you for completing this game! 
+
+[will be links]
+Information on us.
+Information on how to contribute if your interested.
+
+
+
