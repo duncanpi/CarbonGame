@@ -1,3 +1,12 @@
+:: StoryData
+{
+	"ifid": "363EB3AC-4813-475F-81C4-9257EAD00669",
+	"format": "SugarCube",
+    "format-version": "2.30.0",
+    "start": "Start"
+}
+
+
 :: StoryTitle
 Household Carbon Calculator
 
