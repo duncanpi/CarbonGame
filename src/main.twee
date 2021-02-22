@@ -13,6 +13,9 @@ Household Carbon Calculator
 :: Start
 welcome
 
+[[Clothes]]
+
+
 :: Income
 Tax
 
@@ -55,9 +58,9 @@ How much do you spend on average when you buy new clothes? (in £)
 	$categories.clothing.annualSpend = getAnnualSpend(_clothesTimePeriod, _clothesSpendPerPeriod);
 </script>
 
-<<if _clothesTimePeriod != $timePeriod.Annual>
+<if _clothesTimePeriod != $timePeriod.Annual>
 So that means your average annual spend on clothes is $categories.clothing.annualSpend.
-</if>>
+</if>
 
 Your estimated yearly emmisions just for your wardrobe is $categories.clothing.emissions() Ktonnes CO2e.
 
