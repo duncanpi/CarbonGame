@@ -2,18 +2,49 @@
 {
 	"ifid": "363EB3AC-4813-475F-81C4-9257EAD00669",
 	"format": "SugarCube",
-    "format-version": "2.30.0",
-    "start": "Start"
+    "format-version": "2.30.0"
 }
 
 
 :: StoryTitle
-Household Carbon Calculator
+Household Carbon Calculator UK
+
+:: StoryInit
+<<set $totalEmissionCalculated = setup.totalEmissionCalculated>>
+
+<<set $timePeriod =
+{ 
+    Daily: "Daily", 
+    Weekly: "Weekly", 
+    Monthly: "Monthly", 
+    Yearly:"Yearly" 
+}>>
+<<set $salary = 0>>
+
 
 :: Start
-welcome
+<<set $categories = setup.categories>>
+Welcome! We're going to be calculating you're carbon footprint holistically.
 
-[[Clothes]]
+A way of calculating a persons carbon footprint is looking at how you spend your money.
+
+The government actually has quite a large carbon footprint! Which could definitely be made more efficient.
+
+So if you're interested in getting a glimpse at that, please enter your salary, and you can see the carbon footprint in your taxes.
+
+//Not currently working//
+Gross Wage
+<<listbox "_salaryTimePeriod" autoselect>>
+	<<optionsfrom $timePeriod>>
+<</listbox>>
+Paid
+<<numberbox "$salary" 1500 autofocus>>
+
+
+
+So you wake up for the day, and end up looking in your wardrobe to get dressed. 
+
+[[Look at clothes|Clothes]]
 
 
 :: Income
@@ -43,10 +74,10 @@ gaming
 :: Education
 
 :: Clothes
-Lets look into clothes!
-Your wardrobe actually has a fair carbon impact.
+Your wardrobe actually has a fairly large impact on your carbon footprint.
 
 How often do you buy new clothing?
+<<set _clothesTimePeriod = $timePeriod.Monthly>>
 <<listbox "_clothesTimePeriod" autoselect>>
 	<<optionsfrom $timePeriod>>
 <</listbox>>
@@ -54,17 +85,23 @@ How often do you buy new clothing?
 How much do you spend on average when you buy new clothes? (in £)
 <<numberbox "_clothesSpendPerPeriod" 40>>
 
-<script>
-	$categories.clothing.annualSpend = getAnnualSpend(_clothesTimePeriod, _clothesSpendPerPeriod);
-</script>
 
-<if _clothesTimePeriod != $timePeriod.Annual>
-So that means your average annual spend on clothes is $categories.clothing.annualSpend.
-</if>
+<<button "calculate">>
+	<<set $categories.clothing.annualSpend = window.getAnnualSpend(_clothesTimePeriod, _clothesSpendPerPeriod) >> \
+	<<set $categories.clothing.emissions = $categories.clothing.intensity * $categories.clothing.annualSpend>> \
+	<<replace "#summary">>
+		<if _clothesTimePeriod != $timePeriod.Annual>
+		So that means your average annual spend on clothes is $categories.clothing.annualSpend.
+		</if> \
 
-Your estimated yearly emmisions just for your wardrobe is $categories.clothing.emissions() Ktonnes CO2e.
+		Your estimated yearly emmisions just for your wardrobe is <<= Math.floor($categories.clothing.emissions)>> Ktonnes CO2e.
 
-This figure would be less than estimated if you're buying your clothes secondhand.
+		This figure would be less than estimated if you're buying your clothes secondhand.
+		<</replace>>
+<</button>> \
+<div id="summary">
+
+</div>
 
 :: Summary
 

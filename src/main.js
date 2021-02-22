@@ -11,9 +11,9 @@ function getTotalEmissions()
     */
 }
 
-State.variables.totalEmissionCalculated = false;
+setup.totalEmissionCalculated = false;
 
-State.variables.timePeriod = 
+setup.timePeriod = 
 { 
     Daily: "Daily", 
     Weekly: "Weekly", 
@@ -28,12 +28,10 @@ State.variables.categories =
         set: false,
         intensity: 0.400768031363972,
         annualSpend: 0,
-        emissions: function()
-        {
-            return this.co2eIntensity * this.annualSpend;
-        }
+        emissions: 0
     }
 };
+
 
 window.getAnnualSpend = function(timePeriod, spendPerPeriod) 
 {
@@ -41,16 +39,16 @@ window.getAnnualSpend = function(timePeriod, spendPerPeriod)
 
     switch(timePeriod)
     {
-        case timePeriod.Daily:
+        case setup.timePeriod.Daily:
             retVal = spendPerPeriod * 365;
             break;
-        case timePeriod.Weekly:
+        case setup.timePeriod.Weekly:
             retVal = spendPerPeriod * 52;
             break;
-        case timePeriod.Monthly:
+        case setup.timePeriod.Monthly:
             retVal = spendPerPeriod * 12;
             break;
-        case timePeriod.Yearly:
+        case setup.timePeriod.Yearly:
         default:
             retVal = spendPerPeriod;
             break;
