@@ -83,23 +83,23 @@ How often do you buy new clothing?
 <</listbox>>
 
 How much do you spend on average when you buy new clothes? (in £)
-<<numberbox "_clothesSpendPerPeriod" 40>> \
+<<numberbox "_clothesSpendPerPeriod" 40>> 
 
 <<button "calculate">>
-	<<set $categories.clothing.annualSpend = window.getAnnualSpend(_clothesTimePeriod, _clothesSpendPerPeriod) >> \
+	<<set $categories.clothing.annualSpend = window.getAnnualSpend(_clothesTimePeriod, _clothesSpendPerPeriod)>> \
 	<<set $categories.clothing.emissions = $categories.clothing.intensity * $categories.clothing.annualSpend>> \
 	<<replace "#summary">>
 		<if _clothesTimePeriod != $timePeriod.Annual>
-		So that means your average annual spend on clothes is $categories.clothing.annualSpend.
+			So that means your average annual spend on clothes is $categories.clothing.annualSpend.
 		</if> \
 
 		Your estimated yearly emmisions just for your wardrobe is <<= Math.floor($categories.clothing.emissions)>> Ktonnes CO2e.
 
 		This figure would be less than estimated if you're buying your clothes secondhand.
-		<</replace>>
+	<</replace>>
 <</button>> \
-<div id="summary">
 
+<div id="summary">
 </div>
 
 :: Summary

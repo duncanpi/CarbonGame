@@ -20,8 +20,7 @@ jobs:
         run: |
           go get github.com/tmedwards/tweego
           export PATH=$PATH:$(go env GOPATH)/bin
-          tweego src -o builds/index.html
-          tweego src -o non-compiled/index.html
+          tweego -o builds/index.html  src/
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v2
