@@ -83,8 +83,7 @@ How often do you buy new clothing?
 <</listbox>>
 
 How much do you spend on average when you buy new clothes? (in £)
-<<numberbox "_clothesSpendPerPeriod" 40>>
-
+<<numberbox "_clothesSpendPerPeriod" 40>> \
 
 <<button "calculate">>
 	<<set $categories.clothing.annualSpend = window.getAnnualSpend(_clothesTimePeriod, _clothesSpendPerPeriod) >> \
