@@ -205,23 +205,23 @@ How often do you buy new clothing?
 &lt;&lt;/listbox&gt;&gt;
 
 How much do you spend on average when you buy new clothes? (in £)
-&lt;&lt;numberbox &quot;_clothesSpendPerPeriod&quot; 40&gt;&gt; \
+&lt;&lt;numberbox &quot;_clothesSpendPerPeriod&quot; 40&gt;&gt; 
 
 &lt;&lt;button &quot;calculate&quot;&gt;&gt;
-	&lt;&lt;set $categories.clothing.annualSpend = window.getAnnualSpend(_clothesTimePeriod, _clothesSpendPerPeriod) &gt;&gt; \
+	&lt;&lt;set $categories.clothing.annualSpend = window.getAnnualSpend(_clothesTimePeriod, _clothesSpendPerPeriod)&gt;&gt; \
 	&lt;&lt;set $categories.clothing.emissions = $categories.clothing.intensity * $categories.clothing.annualSpend&gt;&gt; \
 	&lt;&lt;replace &quot;#summary&quot;&gt;&gt;
 		&lt;if _clothesTimePeriod != $timePeriod.Annual&gt;
-		So that means your average annual spend on clothes is $categories.clothing.annualSpend.
+			So that means your average annual spend on clothes is $categories.clothing.annualSpend.
 		&lt;/if&gt; \
 
 		Your estimated yearly emmisions just for your wardrobe is &lt;&lt;= Math.floor($categories.clothing.emissions)&gt;&gt; Ktonnes CO2e.
 
 		This figure would be less than estimated if you&#39;re buying your clothes secondhand.
-		&lt;&lt;/replace&gt;&gt;
+	&lt;&lt;/replace&gt;&gt;
 &lt;&lt;/button&gt;&gt; \
-&lt;div id=&quot;summary&quot;&gt;
 
+&lt;div id=&quot;summary&quot;&gt;
 &lt;/div&gt;</tw-passagedata><tw-passagedata pid="13" name="Summary" tags="" position="350,225" size="100,100">Okay compiling everything you&#39;ve said you&#39;re estimated yearly green house gas emissions are ?totalEmissions KTonnes CO2e
 
 For comparison:
