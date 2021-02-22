@@ -15,12 +15,6 @@ jobs:
         uses: actions/setup-go@v1
         with:
           go-version: 1.13.x
-      
-      - name: convert non-compiled
-        run:
-          go get github.com/tmedwards/tweego
-          export PATH=$PATH:$(go env GOPATH)/bin
-          tweego -d -o src non-compiled/index.html
           
       - name: build game
         run: |
