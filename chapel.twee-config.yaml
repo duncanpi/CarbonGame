@@ -1,0 +1,95 @@
+sugarcube-2:
+
+  macros: 
+    # start events
+    on:
+      container: true
+      children:
+        - which
+    one:
+      container: true
+      children:
+        - which
+    event:
+      container: true
+      children:
+        - which
+      deprecated: true
+      depecatedSuggestions:
+        - on
+        - off
+    which:
+      parents:  
+        - on
+        - off
+        - event
+    trigger: {}
+    off: {}
+    # end events
+    
+    # start continue
+    cont:
+      container: true
+    ignore: {}
+    # end continue
+    
+    # start swap
+    swap:
+      container: true
+      children:
+        - onswap
+    onswap:
+      parents:  
+        - swap
+    resetswap: {}
+    # end swap
+    
+    # start mouse events
+    mouseover:
+      container: true
+      children:
+        - onmouseover
+        - onhover
+        - onmousein
+        - onmouseenter
+        - onmouseout
+    onmouseover:
+      parents:  
+        - mouseover
+    onhover:
+      parents:  
+        - mouseover
+    onmousein:
+      parents:  
+        - mouseover
+    onmouseenter:
+      parents:  
+        - mouseover
+    onmouseout:
+      parents:  
+        - mouseover
+    # end mouse events
+    
+    # start message
+    message:
+      container: true
+    # end message
+    
+    # start preload
+    preload: {}
+    # end preload
+    
+    # start done
+    done:
+      container: true
+    # end done
+    
+    # start file system
+    import: {}
+    export: {}
+    # end file system
+    
+    # start disable
+    disable:
+      container: true
+    # end disable

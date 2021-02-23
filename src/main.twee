@@ -6,10 +6,10 @@
 }
 
 
-:: StoryTitle
+:: StoryTitle {"position":"0,100"}
 Household Carbon Calculator UK
 
-:: StoryInit
+:: StoryInit {"position":"100,0"}
 <<set $totalEmissionCalculated = setup.totalEmissionCalculated>>
 
 <<set $timePeriod =
@@ -22,7 +22,7 @@ Household Carbon Calculator UK
 <<set $salary = 0>>
 
 
-:: Start
+:: Start {"position":"200,250"}
 <<set $categories = setup.categories>>
 Welcome! We're going to be calculating you're carbon footprint holistically.
 
@@ -47,33 +47,30 @@ So you wake up for the day, and end up looking in your wardrobe to get dressed.
 [[Look at clothes|Clothes]]
 
 
-:: Income
-Tax
-
-:: Food 
+:: Food {"position":"950,200"}
 Coffee, Tea, Cocoa and powdered chocolate, alchohol, Cigarettes, meat, dairy, takeaways, coffee shops
 
-:: Utilities
+:: Utilities {"position":"800,200"}
 
-:: Redecorate
+:: Redecorate {"position":"1200,200"}
 
-:: Travel
+:: Travel {"position":"1075,200"}
 in country
 globally,
 hotels,
 separate homes: boat, trailer,
 
-:: Hobbies
+:: Hobbies {"position":"425,200"}
 instruments, gardening, boat, gaming,
 
-:: Electronics
+:: Electronics {"position":"675,200"}
 gaming
 
-:: Pets
+:: Pets {"position":"325,525"}
 
-:: Education
+:: Education {"position":"550,200"}
 
-:: Clothes
+:: Clothes {"position":"200,400"}
 Your wardrobe actually has a fairly large impact on your carbon footprint.
 
 How often do you buy new clothing?
@@ -102,7 +99,7 @@ How much do you spend on average when you buy new clothes? (in £)
 <div id="summary">
 </div>
 
-:: Summary
+:: Summary {"position":"200,700"}
 
 Okay compiling everything you've said you're estimated yearly green house gas emissions are ?totalEmissions KTonnes CO2e
 
