@@ -98,7 +98,612 @@ var LZString={_keyStr:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234
 		<div id="init-lacking">Your browser lacks required capabilities. Please upgrade it or switch to another to continue.</div>
 		<div id="init-loading"><div>Loading&hellip;</div></div>
 	</div>
-	<!-- UUID://363EB3AC-4813-475F-81C4-9257EAD00669// --><tw-storydata name="Household Carbon Calculator UK" startnode="2" creator="Tweego" creator-version="2.1.1" ifid="363EB3AC-4813-475F-81C4-9257EAD00669" zoom="1" format="SugarCube" format-version="2.34.1" options="" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css"></style><script role="script" id="twine-user-script" type="text/twine-javascript">// Variables
+	<!-- UUID://363EB3AC-4813-475F-81C4-9257EAD00669// --><tw-storydata name="Household Carbon Calculator UK" startnode="2" creator="Tweego" creator-version="2.1.1" ifid="363EB3AC-4813-475F-81C4-9257EAD00669" zoom="1" format="SugarCube" format-version="2.34.1" options="" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css"></style><script role="script" id="twine-user-script" type="text/twine-javascript">/* twine-user-script #1: "continue-macro.js" */
+(function () {
+    // v1.0.1
+    'use strict';
+
+    // selectors to ignore
+    var ignored = ['a', ':button', '*[role="button"]', '.continue-macro-ignore', '#ui-bar', '#ui-dialog'];
+
+    var _i = 0;
+
+    prehistory['%%continue-expiration'] = function () {
+        _i = 0;
+    };
+
+    function ns () {
+        // create unique namespace
+        var namespace = '.' + Date.now().toString(36) + '-' + _i;
+        _i++;
+        return namespace;
+    }
+
+    function ignoreMe () {
+        $(document).on('click.continue-macro keyup.continue-macro', ignored.join(', '), function (ev) { 
+            ev.stopPropagation(); 
+        });
+    }
+
+    function addIgnore () {
+        if (State.length > 0) {
+            return false;
+        }
+        var args = [].slice.call(arguments).flatten();
+        ignored = ignored.concat(args);
+        return true;
+    }
+
+    $(document).one(':passagerender', function () {
+        // on first render, set up the ignore list
+        ignoreMe();
+    });
+
+    // continue functions
+    function cont (press, cb) {
+        var namespace = ns();
+        if (!cb || typeof cb !== 'function') {
+            return;
+        }
+        var events = 'click.continue-macro' + namespace;
+        if (press) {
+            events = events + ' keyup.continue-macro' + namespace;
+        }
+        $(document).one(events, function () {
+            cb.call();
+            // expire all namespaced events
+            $(document).off(namespace);
+        });
+    }
+
+    function reset () {
+        var args = [].slice.call(arguments).flatten();
+        ignored = ignored.concat(args);
+        $(document).off('.continue-macro');
+        ignoreMe();
+    }
+
+    // macros
+
+    // <<ignore selectors...>>
+    Macro.add('ignore', {
+        handler : function () {
+            var check = addIgnore(this.args);
+            if (!check) {
+                return this.error('the <<ignore>> macro should only be run from StoryInit or equivalent.');
+            }
+        }
+    });
+
+    // <<cont [append] [press]>>Code<</cont>>
+    Macro.add('cont', {
+        tags : null,
+        handler : function () {
+            var append = this.args.includes('append'), // append keyword
+                press = this.args.includesAny('key', 'keypress', 'press', 'button'), // keypress keyword
+                wiki = this.payload[0].contents, // content to wikify
+                $output; // output element (if needed)
+
+            if (append) {
+                // create output element, but only if needed (e.g. if appending content)
+                $output = $(document.createElement('span'))
+                    .addClass('macro-' + this.name)
+                    .appendTo(this.output);
+            }
+
+            cont(press, this.createShadowWrapper( function () {
+                // wikify 
+                if (append && $output && $output instanceof $) {
+                    $output.wiki(wiki);
+                } else {
+                    $.wiki(wiki);
+                }
+            }));
+        }
+    });
+
+    // APIs
+
+    setup.cont = cont;
+    setup.cont.ignore = addIgnore;
+    setup.cont.reset = reset;
+
+    window.cont = window.cont || setup.cont;
+
+}());
+/* twine-user-script #2: "disable-macro.js" */
+(function () {
+    // disable.js, by chapel, for sugarcube 2
+    // v1.0.0
+
+    'use strict';
+
+    var cls = 'disabled';
+    var interactive = ['button', 'fieldset', 'input', 'menuitem', 'optgroup', 'option', 'select', 'textarea'];
+
+    function getEl (self) {
+        // get the first interactive element
+        var $el = $(self).find(interactive.join(',')).first();
+        if (!$el[0]) {
+            $el = $(self).children().eq(0);
+            if (!$el[0]) {
+                return $(self);
+            }
+        }
+        return $el;
+    }
+
+    function changeCls ($el) {
+        if ($el.ariaIsDisabled()) {
+            $el.addClass(cls);
+        } else {
+            $el.removeClass(cls);
+        }
+    }
+
+    function disable ($el, bool) {
+        if (!($el instanceof $)) {
+            $el = $($el);
+        }
+        $el.ariaDisabled((bool === undefined) ? true : !!bool);
+        changeCls($el);
+        return $el;
+    }
+
+    // no need for JS API as there us a built-in jQuery extension
+
+    Macro.add('disable', {
+        tags : null,
+        handler : function () {
+            var bool, $wrapper = $(document.createElement('span'))
+                .addClass('macro-' + this.name)
+                .wiki(this.payload[0].contents);
+
+            try {
+                bool = this.args.raw.trim() ? !!Scripting.evalJavaScript(this.args.full) : undefined;
+            } catch (err) {
+                return this.error("bad evaluation: " + err.message);
+            }
+
+            disable(getEl($wrapper), bool);
+
+            // output
+            $(this.output).append($wrapper);
+        }
+    });
+
+}());
+/* twine-user-script #3: "done-macro.js" */
+// the <<done>> macro, v1.0.1; for SugarCube 2, by chapel
+
+(function () {
+    
+    var counter = 1;
+    // the core function
+    
+    Macro.add('done', {
+        skipArgs : true,
+        tags : null,
+        handler : function () {
+            
+            var wiki = this.payload[0].contents.trim();
+
+            if (wiki === '') {
+                return; // bail
+            }
+            
+            postdisplay[':chapel-done-macro-' + counter] = function (task) {
+                delete postdisplay[task]; // single use
+                $.wiki(wiki); // wikify the source code
+            };
+            
+            counter++;
+        }
+    });
+    
+}());
+/* twine-user-script #4: "events-macro.js" */
+// event macro set, by chapel; for sugarcube 2
+// version 2.0.0
+
+(function () {
+    setup.eventMacroNamespace = 'macro-event';
+
+    // the <<trigger>> macro
+    Macro.add('trigger', {
+        handler : function () {
+            
+            // declare vars
+            var evt, $el;
+            
+            // check for errors
+            if (this.args.length > 2 || this.args.length === 0) {
+                return this.error('incorrect number of arguments');
+            }
+            if (typeof this.args[0] != 'string') {
+                return this.error('first argument should be a string and a valid event type');
+            }
+            
+            // some setup
+            evt = this.args[0];
+            $el = (this.args.length === 1 ||
+                (this.args[1] && typeof this.args[1] === 'string' &&
+                this.args[1].toLowerCase().trim() === 'document')) ?
+                $(document) : $(this.args[1]);
+            
+            // fire the event
+            $el.trigger(evt);
+            
+        }
+    });
+
+    // the <<event>> macro: <<event type [selector] [once]>>
+    Macro.add(['event', 'on', 'one'], {
+           tags : ['which'],
+        handler : function () {
+            
+            var payload = this.payload;
+            var method = 'on';
+            var evt, sel = '', code = '', i;
+            
+            if (this.args.length > 3 || this.args.length === 0) {
+                return this.error('incorrect number of arguments');
+            }
+            if (typeof this.args[0] != 'string') {
+                return this.error('first argument should be a string and a valid event type');
+            }
+            if (this.args.length === 2 && typeof this.args[1] == 'string' && this.args[1] !== 'once') {
+                sel = this.args[1];
+            }
+            
+            if (this.args.includes('once') || this.name === 'one') {
+                method = 'one';
+            }
+
+            evt = this.args[0];
+            
+            $(document)[method](evt + '.' + setup.eventMacroNamespace, sel, function (e) {
+                code = payload[0].contents;
+                if (payload.length > 1) {
+                    for (i = 1; i < payload.length; i++) {
+                        if (payload[i].args.includes(e.which)) {
+                            code = code + payload[i].contents;
+                        }
+                    }
+                }
+                new Wikifier(null, code);
+            });
+            
+        }
+    });
+
+    Macro.add('off', {
+        handler : function () {
+            
+            // declare vars
+            var evt, $el;
+            
+            // check for errors
+            if (this.args.length > 2 || this.args.length === 0) {
+                return this.error('incorrect number of arguments');
+            }
+            if (typeof this.args[0] != 'string') {
+                return this.error('first argument should be a string and a valid event type or namespace');
+            }
+            
+            // some setup
+            evt = this.args[0];
+            $el = (this.args.length === 1 ||
+                (this.args[1] && typeof this.args[1] === 'string' &&
+                this.args[1].toLowerCase().trim() === 'document')) ?
+                $(document) : $(this.args[1]);
+            
+            // fire the event
+            $el.off(evt);
+            
+        }
+    });
+
+}());
+/* twine-user-script #5: "file-macro.js" */
+// fs.js v1.1.0; for SugarCube 2, by chapel
+
+(function () {
+    
+    // core functions
+    
+    function bail (err) {
+        console.error(err);
+        return null;
+    }
+    
+    function stringify (o) {
+        try {
+            return JSON.stringify(o);
+        } catch (err) {
+            return bail(err);
+        }
+    }
+    
+    function b64ify (objOrStr) {
+        try {
+            var str;
+            if (objOrStr === undefined) {
+                return null;
+            } else if (typeof objOrStr !== 'string') {
+                str = stringify(objOrStr);
+            } else {
+                str = objOrStr;
+            }
+            if (str != null) {
+                return LZString.compressToBase64(str);
+            }
+        } catch (err) {
+            return bail(err);
+        }
+    }
+    
+    function decompressB64 (data) {
+        try {
+            return LZString.decompressFromBase64(data);
+        } catch (err) {
+            return bail(err);
+        }
+    }
+    
+    function parse (data) {
+        try {
+            return JSON.parse(data);
+        } catch (err) {
+            try {
+                return JSON.parse(decompressB64(data));
+            } catch (err) {
+                return bail(err);
+            }
+        }
+    }
+    
+    function saveToState (objOrStr, varName) {
+        try {
+            if (varName[0] !== '$' && varName[0] !== '_') {
+                throw new Error('Invalid stateful variable');
+            }
+            if (State.setVar) {
+                State.setVar(varName, clone(objOrStr));
+            } else {
+                if (varName[0] === '$') {
+                    State.variables[varName.substr(1)] = clone(objOrStr);
+                } else {
+                    State.temporary[varName.substr(1)] = clone(objOrStr);
+                }
+            }
+        } catch (err) {
+            return bail(err);
+        }
+    }
+    
+    function saveToFile (fileName, data) {
+        if (typeof data !== 'string') {
+            data = stringify(data);
+        }
+        if (data == null) {
+            return;
+        }
+        if (!fileName || typeof fileName !== 'string') {
+            fileName = 'file.twinedata';
+        } else {
+            fileName = Util.slugify(fileName.trim()).toLowerCase();
+        }
+        if (!fileName.includes('.')) {
+            fileName = fileName + '.twinedata';
+        }
+        try {
+            saveAs(new Blob([data], { type : 'text/plain;charset=UTF-8'}), fileName);
+        } catch (err) {
+            return bail(err);
+        }
+    }
+    
+    function readData (dataType, data) {
+        if (data == null) {
+            return null;
+        }
+        switch (dataType) {
+            case 'json':
+                return parse(data);
+            case 'base64':
+            case 'b64':
+            case '64':
+                return parse(decompressB64(data));
+            default:
+                return data;
+        }
+    }
+    
+    function loadFromFile (e) {
+        var file = e.target.files[0],
+            reader = new FileReader(),
+            storyVar = e.storyVar || '$fileData',
+            dataType = e.dataType || 'text';
+        
+        $(reader).on('load', function (event) {
+            try {
+                var target = event.currentTarget;
+                if (!target.result) {
+                    return;
+                }
+                
+                var data = readData(dataType, target.result);
+                
+                saveToState(data, storyVar);
+
+                $(document).trigger({
+                    type : ':import-macro',
+                    success : true,
+                    data : clone(data),
+                    raw : target.result,
+                    storyVar : storyVar
+                });
+
+            } catch (err) {
+
+                saveToState(null, storyVar);
+
+                $(document).trigger({
+                    type : ':import-macro',
+                    success : false,
+                    data : null,
+                    raw : null,
+                    storyVar : storyVar
+                });
+                
+                return bail(err);
+
+            }
+        });
+        
+        reader.readAsText(file);
+    }
+    
+    function createImportButton (text, storyVar, dataType, asLink) {
+        var $btn = $(document.createElement(asLink ? 'a' : 'button'))
+                .wiki(text),
+            $label = $(document.createElement('label'))
+                .attr('for', 'file-import')
+                .addClass('upload-file')
+                .append($btn),
+            $input = $(document.createElement('input'))
+                .attr({
+                    id : 'file-import',
+                    type : 'file',
+                    'data-format' : dataType
+                }).css('display', 'none').on('change', function (e) {
+                    var ev = Object.assign(clone(e), {
+                        storyVar : storyVar,
+                        dataType : $(this).attr('data-format')
+                    });
+                    loadFromFile(ev);
+                }),
+            $wrapper = $(document.createElement('span'))
+                .append($label, $input);
+        
+        $btn.ariaClick(function () {
+            $label.trigger('click');
+        });
+        
+        return $wrapper;
+    }
+    
+    function exportToFile (data, fileName, dataType) {
+        var str;
+        switch (dataType) {
+            case 'json':
+                str = stringify(data);
+                break;
+            case 'base64':
+            case 'b64':
+            case '64':
+                str = b64ify(stringify(data) || data);
+                break;
+            default:
+                str = (typeof data === 'string') ? data : stringify(data);
+        }
+        saveToFile(fileName, str);
+    }
+    
+    function importFromFile (targetOnPage, text, storyVar, dataType, asLink) {
+        var $importElement = createImportButton(text, storyVar, dataType, asLink),
+            target;
+        if (targetOnPage && typeof targetOnPage === 'string') {
+            target = $(targetOnPage);
+        } else if (targetOnPage) {
+            target = targetOnPage;
+        } else {
+            target = '#passages';
+        }
+        
+        $importElement.appendTo(target);
+    }
+    
+    // setup API
+    
+    setup.fileSystem = {
+        config : {
+            defaultText : 'Import',
+            renderAsLink : false
+        },
+        JSON : {
+            stringify : stringify,
+            parse : parse
+        }, 
+        b64 : {
+            compress : b64ify,
+            decompress : decompressB64
+        }, 
+        toState : saveToState,
+        toFile : saveToFile,
+        fromFile : loadFromFile
+    };
+    
+    // global API
+    
+    window.Chapel = window.Chapel || {};
+    Chapel.fileSystem = Chapel.fileSystem || setup.fileSystem;
+    
+    // macros
+    
+    Macro.add('import', {
+        handler : function () {
+            
+            var target = this.output,
+                linkText = this.args[2], 
+                storyVar = this.args[0], 
+                dataType = this.args[1];
+            
+            if (!linkText || typeof linkText !== 'string') {
+                linkText = setup.fileSystem.config.defaultText;
+            }
+            if (!storyVar || typeof storyVar !== 'string' || (storyVar[0] !== '$' && storyVar[0] !== '_')) {
+                return this.error('Invalid variable name.');
+            }
+            if (!dataType || typeof dataType !== 'string') {
+                dataType = 'text';
+            } else {
+                dataType = dataType.trim();
+            }
+            importFromFile(target, linkText, storyVar, dataType, setup.fileSystem.config.renderAsLink);
+            
+        }
+    });
+    
+    Macro.add('export', {
+        handler : function () {
+            
+            var data = this.args[0],
+                file = this.args[1],
+                type = this.args[2];
+            
+            if (!data) {
+                return this.error('No data to save...');
+            }
+            if (!type || typeof type !== 'string') {
+                type = 'text';
+            } else {
+                type = type.trim();
+            }
+            if (!file || typeof file !== 'string') {
+                file = 'file.twinedata';
+            } else {
+                file = file.trim();
+            }
+            
+            exportToFile(data, file, type);
+            
+        }
+    });
+}());
+/* twine-user-script #6: "main.js" */
+// Variables
 
 var _totalEmissions;
 
@@ -163,7 +768,413 @@ Template.add('totalEmissions', function () {
         _totalEmissions = getTotalEmissions();
     }
     return _totalEmissions;
-});</script><tw-passagedata pid="1" name="StoryInit" tags="" position="100,100" size="100,100">&lt;&lt;set $totalEmissionCalculated = setup.totalEmissionCalculated&gt;&gt;
+});
+/* twine-user-script #7: "message-macro.js" */
+// message macro, by chapel (with help from T.M. Edwards); for sugarcube 2
+// version 1.0.1
+// see the documentation: https://github.com/ChapelR/custom-macros-for-sugarcube-2#message-macro
+
+//intialize namespace
+setup.messageMacro = {};
+
+// default text option:
+setup.messageMacro.default = 'Help';
+
+// <<message>> macro
+Macro.add('message', {
+    tags    : null,
+    handler : function () {
+        var message  = this.payload[0].contents;
+        var $wrapper = $(document.createElement('span'));
+        var $link    = $(document.createElement(this.args.includes('btn') ? 'button' : 'a'));
+        var $content = $(document.createElement('span'));
+
+        $link
+            .wiki(this.args.length > 0 && this.args[0] !== 'btn' ? this.args[0] : setup.messageMacro.default)
+            .ariaClick( this.createShadowWrapper( function () {
+                if ($wrapper.hasClass('open')) {
+                    $content
+                        .css('display', 'none')
+                        .empty();
+                }
+                else {
+                    $content
+                        .css('display', 'block')
+                        .wiki(message);
+                }
+
+                $wrapper.toggleClass('open');
+            }));
+
+        $wrapper
+            .attr('id', 'macro-' + this.name + '-' + this.args.join('').replace(/[^A-Za-z0-9]/g, ''))
+            .addClass('message-text')
+            .append($link)
+            .append($content)
+            .appendTo(this.output);
+    }
+});
+/* twine-user-script #8: "mouseover-macro.js" */
+(function () {
+    // mouseover macro, v1.0.1, by chapel, for sugarcube 2
+
+    Macro.add('mouseover', {
+
+        tags: [
+            'onhover', 
+            'onmouseover', 
+            'onmousein', 
+            'onmouseenter',
+            'onmouseout'
+        ],
+
+        skipArgs: true,
+
+        handler: function () {
+
+            if (this.payload.length < 2) {
+                return this.error('No event tag used.');
+            }
+
+            var wiki = {
+                mouseover : [],
+                mousein : [],
+                mouseout : []
+            };
+
+            var $el = $(document.createElement('span'))
+                .addClass('macro-' + this.name)
+                .wiki(this.payload[0].contents)
+                .appendTo(this.output);
+
+            // iterate through the tags
+            this.payload.forEach( function (payload) {
+                switch (payload.name) {
+                    case 'onhover':
+                    case 'onmouseover':
+                        wiki.mouseover.push(payload.contents);
+                        break;
+                    case 'onmousein':
+                    case 'onmouseenter':
+                        wiki.mousein.push(payload.contents);
+                        break;
+                    case 'onmouseout':
+                        wiki.mouseout.push(payload.contents);
+                        break;
+                    default:
+                        return;
+                }
+            });
+
+            // attach appropriate events
+            if (wiki.mouseover.length) {
+                $el.on('mouseover', this.createShadowWrapper(function (ev) {
+                    $.wiki(wiki.mouseover.join(' '));
+                }));
+            }
+            if (wiki.mousein.length) {
+                $el.on('mouseenter', this.createShadowWrapper(function (ev) {
+                    $.wiki(wiki.mousein.join(' '));
+                }));
+            }
+            if (wiki.mouseout.length) {
+                $el.on('mouseout', this.createShadowWrapper(function (ev) {
+                    $.wiki(wiki.mouseout.join(' '));
+                }));
+            }
+        }
+    });
+}());
+/* twine-user-script #9: "preload-macro.js" */
+(function () {
+    'use strict';
+    // v1.0.0
+    // preload images prior to story startup
+
+    function preloadImage (url, cb) {
+        var img = new Image();
+        img.onload = cb;
+        img.onerror = cb;
+        img.src = url;
+    }
+
+    function preloadAll (urls, cb) {
+        var loaded = 0;
+        var toBeLoaded = urls.length;
+        urls.forEach( function (url) {
+            preloadImage( url, function () {
+                loaded++;
+                if (loaded === toBeLoaded) {
+                    cb();
+                }
+            });
+        });
+    }
+
+    function isInit () {
+        return State.length <= 0;
+    }
+
+
+    function preload () {
+        var list = [].slice.call(arguments).flatten();
+        var id = isInit() ? LoadScreen.lock() : false;
+        preloadAll( list, function () {
+            if (id) {
+                LoadScreen.unlock(id);
+            }
+        });
+        return id;
+    }
+
+    setup.preload = preload;
+    setup.preload.force = false;
+
+    /* <<preload imageUrls...>> */
+    Macro.add('preload', {
+        handler : function () {
+            if (!isInit() && !setup.preload.force) {
+                return this.error("Attempting to preload images outside of `StoryInit` or similar can cause performance issues. Set `setup.preload.force` to `true` if you want to do it anyway.");
+            }
+            preload(this.args.flatten().filter( function (url) {
+                return typeof url === 'string';
+            }));
+        }
+    });
+}());
+/* twine-user-script #10: "swap-macro.js" */
+/*
+    the following `(function () {...}());` statement creates a local scope for our JavaScript code.
+    this is called an IIFE, or "immediately invoked function expression". most langauges have block scoping,
+    JS has function scoping. think of this as a way to get block scoping to prevent any of our stuff from
+    polluting the global scope.
+*/
+
+(function () {
+
+    // v1.1.0
+
+    /*
+        in SC, all of your scripts run in-engine are run in strict mode no matter what you do, so the below
+        statement is optional. still, it's best to be explicit with what's happening. generally speaking, I
+        recommend strict mode all the time; there's some cases where you may want to skip it, but overall it
+        makes JavaScript way more consistent and way more likely to tell you about errors instead of doing something
+        unexpected.
+    */
+
+    'use strict';
+
+    /*
+        I usually use an object like the one below to set up user configuration options. because of
+        when our script is loaded, we need to set these options here, we can't do something like 
+        `Config.swapMacro.normal = 'x'` like SugarCube's configs can, at least not in SC's current version
+    */
+
+    var options = {  
+        // the colors of the content
+        tryGlobal : true,
+        resetButton : true, // if false, renders a link (`<a>`) instead of a button
+        normal : 'violet',
+        selected : 'red',
+        cls : 'swappable' // we use 'cls' because 'class' is a reserved word in JavaScript
+    };
+
+    setup.swap = setup.swap || {};
+
+    /*
+        the `first` variable below is inside what is called a 'closure.' this means the variable is 
+        only accessible within this `(function () { ... }());` scope. this variable will hold one of our swap
+        elements. if it's set to something when a swap is clicked, it'll do the swap thing
+    */
+
+    var $first = null;
+
+    function getCurrent (str) {
+        // create a function on the fly
+        var g = function () {
+            return str;
+        };
+        setup.swap.current = g;
+        if (options.tryGlobal) {
+            window.swapCurrent = g;
+        }
+    }
+
+    function removeCurrent () {
+        if (setup.swap.current && typeof setup.swap.current === 'function') {
+            delete setup.swap.current;
+        }
+        if (options.tryGlobal && window.swapCurrent && typeof window.swapCurrent === 'function') {
+            delete window.swapCurrent;
+        }
+    }
+
+    /*
+        we're going to have a function and a macro definition. we can put the function
+        inside the macro, but I try to avoid doing that--doing so means that the only way you can
+        use this system from inside JavaScript is by the jQuery `wiki()` methods, which are slow.
+        by creating the function separately, we build a JavaScript-facing API for authors to use, but
+        more on that later.
+    */
+
+    function swappable (content /* the word(s) to be swapped */, wiki /* wikicode to run */) {
+        /*
+            $wrapper is a jQuery object; we add the $ at the start to denote this,
+            the $ has nothing to do with story variables, so don't let that confuse you
+        */
+        var $wrapper = $(document.createElement('span'));
+        // a wrapper is just an element to hold the stuff we want.
+        var $swappable = $(document.createElement('a'))
+            .wiki(content) // this wikifies (parses the `content` into the `a` element)
+            .css('color', options.normal) // set our default color
+            .attr({
+                // these are custom html attributes; they always start with `data-`
+                'data-swap-flag' : 'false', // set our custom attribute to the string false
+                // normally you wouldn't use a string, but html converts everything to a string
+                'data-orig-content' : content, // this is the original content so we can reset it
+                'data-wiki-code' : wiki || ''
+            }) 
+            .addClass(options.cls) // this adds out class
+            .appendTo($wrapper); // this adds the `a` element to our wrapper
+
+        /*
+            we're going to add our event handlers now. we could chain these above, but this is simpler to comment
+            we use SC's `ariaClick()` method instead of `on('click', ...)` or `click(...)` because it is designed
+            for accessibility from the ground up.
+        */
+
+        $swappable.ariaClick( function (ev /* this is the event object */) {
+            ev.preventDefault(); // this stops any default browser behavior from happening
+            // we cache a reference to $(this); the jQuery-wrapped `this`, since we'll use it a lot
+            var $this = $(this); // the `this` keyword in an event handler is the element the handler was attached to
+
+            // let's check the swapped state
+            // we check this first because swapping an element with itself is possible, but a waste of resources
+            if ($this.attr('data-swap-flag') === 'true') {
+                // if the attribute swap flag is already set, we should toggle it
+                $this
+                    .attr('data-swap-flag', 'false')
+                    .css('color', options.normal);
+                // reset the first clicked element, since this one was clicked twice
+                $first = null;
+            } else {
+                // this was clicked and wasn't clicked twice, so let's see if there's already an element in `first`
+                if (!$first) {
+                    // null is false-y and jQuery objects are truthy. this block is run if nothing was captured by `first` yet
+                    $first = $this; // we pass a reference to *this* element to first
+                    // then we set the element to appear selected
+                    $this
+                        .attr('data-swap-flag', 'true')
+                        .css('color', options.selected);
+                } else {
+                    // another element was already selected. there's a few things we need to do here.
+                    var firstContent = $first.text();
+                    var secondContent = $this.text();
+
+                    // cache the wikifier code
+                    var firstWiki = $first.attr('data-wiki-code');
+                    var secondWiki = $this.attr('data-wiki-code');
+
+                    $first
+                        // reset the flag and color
+                        .attr('data-swap-flag', 'false')
+                        .css('color', options.normal)
+                        // empty and replace the content
+                        .empty()
+                        .wiki(secondContent);
+                    $this // do the same with $this
+                        .attr('data-swap-flag', 'false')
+                        .css('color', options.normal)
+                        .empty()
+                        .wiki(firstContent);
+                    // reset $first!
+
+                    // run the wikifier code for both, if they exist
+                    if (firstWiki && typeof firstWiki === 'string' && firstWiki.trim()) {
+                        getCurrent(secondContent);
+                        $.wiki(firstWiki);
+                    }
+                    if (secondWiki && typeof secondWiki === 'string' && secondWiki.trim()) {
+                        getCurrent(firstContent);
+                        $.wiki(secondWiki);
+                    }
+                    removeCurrent();
+                    $first = null;
+                }
+            }
+        });
+
+        // we return the whole html structure
+        return $wrapper;
+
+        /*
+            the html structure is:
+            <span> ($wrapper)
+                <a class='swappable' data-swap-flag='false'> ($swappable)
+                    [content]
+                </a>
+            </span>
+        */
+    }
+
+    function reset () {
+        // this function will reset ever swappable element on the page
+        $first = null;
+        // reset each link
+        $('a.' + options.cls).each( function () {
+            var $this = $(this);
+            $this
+                // restore original content
+                .empty()
+                .wiki($this.attr('data-orig-content'))
+                // reset flag and color
+                .attr('data-swap-flag', 'false')
+                .css('color', options.normal);
+        });
+    }
+
+    // now lets make a macro
+
+    Macro.add('swap' /* the macro name, so `<<swap>>` */, {
+        tags : ['onswap'], // this makes a container macro, eg: `<<macro>>...<</macro>>`
+        skipArgs : true, // we aren't using the argument parser, so this saves us performance
+        handler : function () {
+            // this is the macro's behavior, `this` represents the context and content of the macro
+            var content = this.payload[0].contents; // this is the content between <<swap>> and <<onswap>>
+            var wikiCode = this.payload[1] ? this.payload[1].contents : ''; // the code between <<onswap>> and <</swap>>
+            var output = this.output; // this is the macro's position on the page--it's where the output will go
+            var name = this.name; // this is the macro's name (eg: 'swap'); this lets us change the macros name easily rather than hard-coding it
+
+            // now we call our function
+            var $wrapper = swappable(content, wikiCode);
+
+            // now we append the generated jQuery element to the output area:
+            $wrapper
+                .addClass('macro-' + name)
+                .appendTo(output);
+        }
+    });
+
+    // now for a <<swapreset>> macro
+
+    Macro.add('resetswap', { // by skipping the `tags` option altogether, we make a normal macro (eg, no closing tag)
+        handler : function () {
+            var text = (this.args && this.args[0] && typeof this.args[0] === 'string') ? this.args[0] : 'Reset';
+            $(document.createElement(options.resetButton ? 'button' : 'a'))
+                .wiki(text)
+                .ariaClick({ label : 'Reset all swappable elements.' }, function (ev) {
+                    ev.preventDefault();
+                    reset();
+                })
+                .appendTo(this.output);
+        }
+    });
+
+    // now we send out API functions to setup
+    setup.swap.create = swappable;
+    setup.swap.reset = reset;
+    // now we have a JavaScript API and a set of macros!
+}());</script><tw-passagedata pid="1" name="StoryInit" tags="" position="100,0" size="100,100">&lt;&lt;set $totalEmissionCalculated = setup.totalEmissionCalculated&gt;&gt;
 
 &lt;&lt;set $timePeriod =
 { 
@@ -172,7 +1183,7 @@ Template.add('totalEmissions', function () {
     Monthly: &quot;Monthly&quot;, 
     Yearly:&quot;Yearly&quot; 
 }&gt;&gt;
-&lt;&lt;set $salary = 0&gt;&gt;</tw-passagedata><tw-passagedata pid="2" name="Start" tags="" position="225,100" size="100,100">&lt;&lt;set $categories = setup.categories&gt;&gt;
+&lt;&lt;set $salary = 0&gt;&gt;</tw-passagedata><tw-passagedata pid="2" name="Start" tags="" position="200,250" size="100,100">&lt;&lt;set $categories = setup.categories&gt;&gt;
 Welcome! We&#39;re going to be calculating you&#39;re carbon footprint holistically.
 
 A way of calculating a persons carbon footprint is looking at how you spend your money.
@@ -193,10 +1204,10 @@ Paid
 
 So you wake up for the day, and end up looking in your wardrobe to get dressed. 
 
-[[Look at clothes|Clothes]]</tw-passagedata><tw-passagedata pid="3" name="Income" tags="" position="350,100" size="100,100">Tax</tw-passagedata><tw-passagedata pid="4" name="Food" tags="" position="475,100" size="100,100">Coffee, Tea, Cocoa and powdered chocolate, alchohol, Cigarettes, meat, dairy, takeaways, coffee shops</tw-passagedata><tw-passagedata pid="5" name="Utilities" tags="" position="600,100" size="100,100"></tw-passagedata><tw-passagedata pid="6" name="Redecorate" tags="" position="725,100" size="100,100"></tw-passagedata><tw-passagedata pid="7" name="Travel" tags="" position="850,100" size="100,100">in country
+[[Look at clothes|Clothes]]</tw-passagedata><tw-passagedata pid="3" name="Food" tags="" position="950,200" size="100,100">Coffee, Tea, Cocoa and powdered chocolate, alchohol, Cigarettes, meat, dairy, takeaways, coffee shops</tw-passagedata><tw-passagedata pid="4" name="Utilities" tags="" position="800,200" size="100,100"></tw-passagedata><tw-passagedata pid="5" name="Redecorate" tags="" position="1200,200" size="100,100"></tw-passagedata><tw-passagedata pid="6" name="Travel" tags="" position="1075,200" size="100,100">in country
 globally,
 hotels,
-separate homes: boat, trailer,</tw-passagedata><tw-passagedata pid="8" name="Hobbies" tags="" position="975,100" size="100,100">instruments, gardening, boat, gaming,</tw-passagedata><tw-passagedata pid="9" name="Electronics" tags="" position="1100,100" size="100,100">gaming</tw-passagedata><tw-passagedata pid="10" name="Pets" tags="" position="1225,100" size="100,100"></tw-passagedata><tw-passagedata pid="11" name="Education" tags="" position="100,225" size="100,100"></tw-passagedata><tw-passagedata pid="12" name="Clothes" tags="" position="225,225" size="100,100">Your wardrobe actually has a fairly large impact on your carbon footprint.
+separate homes: boat, trailer,</tw-passagedata><tw-passagedata pid="7" name="Hobbies" tags="" position="425,200" size="100,100">instruments, gardening, boat, gaming,</tw-passagedata><tw-passagedata pid="8" name="Electronics" tags="" position="675,200" size="100,100">gaming</tw-passagedata><tw-passagedata pid="9" name="Pets" tags="" position="325,525" size="100,100"></tw-passagedata><tw-passagedata pid="10" name="Education" tags="" position="550,200" size="100,100"></tw-passagedata><tw-passagedata pid="11" name="Clothes" tags="" position="200,400" size="100,100">Your wardrobe actually has a fairly large impact on your carbon footprint.
 
 How often do you buy new clothing?
 &lt;&lt;set _clothesTimePeriod = $timePeriod.Monthly&gt;&gt;
@@ -222,7 +1233,7 @@ How much do you spend on average when you buy new clothes? (in £)
 &lt;&lt;/button&gt;&gt; \
 
 &lt;div id=&quot;summary&quot;&gt;
-&lt;/div&gt;</tw-passagedata><tw-passagedata pid="13" name="Summary" tags="" position="350,225" size="100,100">Okay compiling everything you&#39;ve said you&#39;re estimated yearly green house gas emissions are ?totalEmissions KTonnes CO2e
+&lt;/div&gt;</tw-passagedata><tw-passagedata pid="12" name="Summary" tags="" position="200,700" size="100,100">Okay compiling everything you&#39;ve said you&#39;re estimated yearly green house gas emissions are ?totalEmissions KTonnes CO2e
 
 For comparison:
 add comparison
